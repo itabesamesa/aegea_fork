@@ -84,7 +84,7 @@ export async function getPost(id: string) {
     const page = await fetch(url);
     const document = parse(await page.text());
 
-    const originalImageA = document.querySelector("div#content div.link-list li:nth-child(3) a") as HTMLAnchorElement | null;
+    const originalImageA = document.querySelector("a[style='font-weight: bold;']") as HTMLAnchorElement | null;
     const href = originalImageA?.getAttribute("href");
     return href;
 }
