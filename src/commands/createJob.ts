@@ -96,6 +96,7 @@ export default {
             }
 
             await db.insert(jobTable).values(dbEntry);
+            jobs.push(job);
 
             interaction.reply({
                 content: `secondsDelay: ${secondsDelay}`,
