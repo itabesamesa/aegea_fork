@@ -67,3 +67,13 @@ export function createJobTask(client: Client<true>, job: Job,
         throw Error("Not yet implemented.");
     }
 }
+
+export function clearJobTask(jobId: number) {
+    const jobTask = jobTasks.find(j => j.jobId === jobId);
+    if (jobTask) {
+        clearTimeout(jobTask.timeout);
+        if (jobTask.interval) {
+            clearInterval(jobTask.interval);
+        }
+    }
+}

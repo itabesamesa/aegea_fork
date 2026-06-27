@@ -2,7 +2,7 @@ import { and, count, eq, gte, lt } from "drizzle-orm";
 import { db } from "./env";
 import { createIntervalTypes } from "./intervals";
 import { jobTable, postTable, sentTable } from "./schema";
-import { jobTasks } from "./jobStore";
+import { clearJobTask } from "./jobStore";
 
 export async function setupDb() {
     try {
@@ -24,13 +24,7 @@ export async function deleteJob(id: number) {
     try {
         await db.delete(sentTable).where(eq(sentTable.jobId, id));
         await db.delete(jobTable).where(eq(jobTable.id, id));
-        const jobTask = jobTasks.find(j => j.jobId === id);
-        if (jobTask) {
-            clearTimeout(jobTask.timeout);
-            if (jobTask.interval) {
-                clearInterval(jobTask.interval);
-            }
-        }
+        clearJobTask(id);
     } catch (e: unknown) {
         console.log(e);
         if (e instanceof Error) {
