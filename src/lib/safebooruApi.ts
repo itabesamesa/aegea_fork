@@ -2,9 +2,10 @@ import { parse } from "node-html-parser";
 import { Post, SafebooruApiPost } from "./types";
 
 const MAX_POSTS_PER_PAGE = 1000;
+const MAX_ITERATIONS = 1000;
 
-const HOST = "https://safebooru.org"
-const PATH = "/index.php"
+const HOST = "https://safebooru.org";
+const PATH = "/index.php";
 
 async function fetchTotalPosts(tags: string) {
     const url = new URL(HOST);
@@ -30,16 +31,20 @@ async function fetchTotalPosts(tags: string) {
 
 export async function fetchRandomPost(tags: string, alreadySentIds: Set<number>) {
     const totalPosts = await fetchTotalPosts(tags);
+    if (totalPosts === 0) {
+        throw Error(`No posts were found for tags \`${tags}\``);
+    }
+
     const validIndices: Set<number> = new Set();
     for (let i = 0; i < totalPosts; i++) { validIndices.add(i); }
 
     let iterations = 0;
-    while (iterations < 1000) {
+    while (iterations < MAX_ITERATIONS) {
         iterations++;
 
         const randomIndex = Math.floor(Math.random() * validIndices.size);
         const pageIndex = Math.floor(randomIndex / MAX_POSTS_PER_PAGE);
-        const offset = pageIndex * 1000;
+        const offset = pageIndex * MAX_POSTS_PER_PAGE;
         const range = await fetchRange(tags, pageIndex);
         const wantedPost = range.at(randomIndex-offset)!;
         if (alreadySentIds.has(wantedPost.postId)) {
@@ -68,13 +73,14 @@ async function fetchRange(tags: string, pageId: number): Promise<Post[]> {
     url.searchParams.set("pid", pageId.toString());
 
     const page = await fetch(url);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const json: SafebooruApiPost[] = await page.json();
     return json.map((o) => {return {
         fileUrl: o.file_url,
         postUrl: `${HOST}${PATH}?page=post&s=view&id=${o.id}`,
         source: o.source,
         postId: o.id
-    }});
+    };});
 }
 
 function getDuplicateIndices(range: Post[], alreadySentIds: Set<number>) {

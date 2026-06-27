@@ -1,11 +1,12 @@
 import { ChatInputCommandInteraction, MessageFlagsBitField, SlashCommandBuilder } from "discord.js";
 import { findJobsByChannel, findJobsByServer } from "../lib/dbScripts";
 import { Job, jobToString } from "../lib/jobStore";
+import { ADMIN_PERMISSION_BIT } from "../lib/consts";
 
 const data = new SlashCommandBuilder()
     .setName('listjobs')
     .setDescription('List all jobs.')
-    .setDefaultMemberPermissions(1 << 5)
+    .setDefaultMemberPermissions(1 << ADMIN_PERMISSION_BIT)
     .addBooleanOption(option =>
         option.setName("global")
             .setDescription("List all jobs in the server instead of just the channel?")
@@ -19,7 +20,7 @@ export default {
         if (global) {
             const guildId = interaction.guildId;
             if (!guildId) {
-                return interaction.reply("You can only list all jobs in the server if you're using the command in a server :p")
+                return interaction.reply("You can only list all jobs in the server if you're using the command in a server :p");
             }
             jobs = await findJobsByServer(guildId);
         } else {
@@ -33,4 +34,4 @@ export default {
             flags: MessageFlagsBitField.Flags.Ephemeral
         });
     }
-}
+};

@@ -1,11 +1,12 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlagsBitField, SlashCommandBuilder } from "discord.js";
 import { deleteJob, findJobById } from "../lib/dbScripts";
 import { jobToString } from "../lib/jobStore";
+import { ADMIN_PERMISSION_BIT } from "../lib/consts";
 
 const data = new SlashCommandBuilder()
     .setName('deletejob')
     .setDescription('Delete a job.')
-    .setDefaultMemberPermissions(1 << 5)
+    .setDefaultMemberPermissions(1 << ADMIN_PERMISSION_BIT)
     .addIntegerOption(option =>
         option.setName("id")
             .setDescription("The ID of the job you want to delete.")
@@ -21,7 +22,7 @@ export default {
             return interaction.reply({
                 content: `Couldn't find a post with ID ${id}.`,
                 flags: MessageFlagsBitField.Flags.Ephemeral
-            })
+            });
         }
         const sameChannel = job[0].channelId === interaction.channelId;
 
@@ -39,7 +40,7 @@ export default {
         try {
             const confirmation = (await response.resource?.message?.awaitMessageComponent({ time: 60_000 }))!;
 
-            if (confirmation!.customId === 'confirm') {
+            if (confirmation.customId === 'confirm') {
                 const deletion = await deleteJob(id);
                 if (deletion) {
                     return confirmation.update({ content: `Error: ${deletion.message}`, components: [] });
@@ -52,4 +53,4 @@ export default {
             await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling', components: [] });
         }
     }
-}
+};

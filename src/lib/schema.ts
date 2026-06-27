@@ -24,7 +24,7 @@ export const jobTable = sqliteTable("job", {
 export const postTable = sqliteTable("post", {
     id: int("id").primaryKey({autoIncrement: true}),
     sitePostId: int("site_post_id").notNull().unique()
-})
+});
 
 export const sentTable = sqliteTable("sent", {
     jobId: int("job_id").notNull().references(() => jobTable.id),

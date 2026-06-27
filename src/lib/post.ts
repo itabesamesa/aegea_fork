@@ -1,4 +1,4 @@
-import { Client, SendableChannels } from "discord.js";
+import { Client } from "discord.js";
 import { fetchRandomPost } from "./safebooruApi";
 import { Job } from "./jobStore";
 import { postTable, sentTable } from "./schema";
@@ -8,16 +8,14 @@ import { findPostBySitePostId, findSentPostsByJob } from "./dbScripts";
 export async function sendPost(client: Client<true>, job: Job) {
     const channel = await client.channels.fetch(job.channelId);
     if (channel?.isSendable()) {
-        const sendableChannel = channel as SendableChannels;
-
         const sentIds = await findSentPostsByJob(job.id);
         const sentPostIds = new Set(sentIds.map((s) => s.sitePostId));
 
         const attachment = await fetchRandomPost(job.tagList, sentPostIds);
         if (!attachment) {
-            return sendableChannel.send({
+            return channel.send({
                 content: `Could not find new post with tags \`${job.tagList}\` :c Maybe we're all outta posts?`,
-            })
+            });
         }
 
         let dbPost = await findPostBySitePostId(attachment.postId);
@@ -27,7 +25,7 @@ export async function sendPost(client: Client<true>, job: Job) {
         const postId = dbPost[0].id;
         await db.insert(sentTable).values({ jobId: job.id, postId });
 
-        return sendableChannel.send({
+        return channel.send({
             content: `${job.message}\n[[source](<${attachment.source}>)] [[link](<${attachment.postUrl}>)] [ [file](${attachment.fileUrl}) ]`
         });
     }

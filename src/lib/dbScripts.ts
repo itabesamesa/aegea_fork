@@ -5,7 +5,11 @@ import { jobTable, postTable, sentTable } from "./schema";
 import { jobTasks } from "./jobStore";
 
 export async function setupDb() {
-    createIntervalTypes();
+    try {
+        await createIntervalTypes();
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 export async function getJobs() {

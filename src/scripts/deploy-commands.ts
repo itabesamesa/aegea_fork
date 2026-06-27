@@ -8,20 +8,24 @@ const commands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
 const commandFiles = readdirSync(COMMAND_DIR_PATH).filter(file => file.endsWith('.ts'));
 
 for (const file of commandFiles) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { default: command } = await import(`../commands/${file}`);
     try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         commands.push(command.data.toJSON());
     } catch {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         commands.push(command.data);
     }
 }
 
 const rest = new REST({version:'10'}).setToken(discordToken);
 
-(async () => {
+await (async () => {
     try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 		const data = await rest.put(
 			Routes.applicationCommands(clientId),
 			{ body: commands },

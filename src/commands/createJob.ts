@@ -3,11 +3,14 @@ import { jobTable } from "../lib/schema";
 import { db } from "../lib/env";
 import { IntervalTypes } from "../lib/intervals";
 import { createJobTask } from "../lib/jobStore";
+import { ADMIN_PERMISSION_BIT, MILISECONDS_PER_SECOND, SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from "../lib/consts";
+
+
 
 const data = new SlashCommandBuilder()
     .setName('createjob')
     .setDescription('Create a job to periodically post images in THIS channel.')
-    .setDefaultMemberPermissions(1 << 5)
+    .setDefaultMemberPermissions(1 << ADMIN_PERMISSION_BIT)
     .addStringOption(option => 
         option.setName('taglist')
             .setDescription('Safebooru tags to search by')
@@ -52,9 +55,9 @@ export default {
         const cron = interaction.options.getString('cron');
 
         const secondsDelay = intervalSeconds +
-        intervalMinutes * 60 +
-        intervalHours * 60 * 60 +
-        intervalDays * 60 * 60 * 24;
+        intervalMinutes * SECONDS_PER_MINUTE +
+        intervalHours * SECONDS_PER_HOUR +
+        intervalDays * SECONDS_PER_DAY;
 
         if (cron && secondsDelay) {
             return interaction.reply({
@@ -82,7 +85,7 @@ export default {
                 userId: interaction.user.id,
                 tagList: tagList!,
                 intervalType: intervalType,
-                timestamp: Date.now() + initialDelay * 1000,
+                timestamp: Date.now() + initialDelay * MILISECONDS_PER_SECOND,
                 message: message ?? "",
                 intervalSeconds: secondsDelay,
                 intervalCron: cron,
@@ -91,7 +94,7 @@ export default {
             const job = await db.insert(jobTable).values(dbEntry).returning();
             createJobTask(interaction.client, job[0], initialDelay);
 
-            interaction.reply({
+            await interaction.reply({
                 content: `Successfully created job! Will send random \`${tagList}\` post every ${secondsDelay} seconds`,
                 flags: MessageFlagsBitField.Flags.Ephemeral
             });
@@ -101,8 +104,10 @@ export default {
                 interaction.reply({
                     content: `Error: ${e.message}`,
                     flags: MessageFlagsBitField.Flags.Ephemeral
+                }).catch(e => {
+                    console.error(e);
                 });
             }
         }
     }
-}
+};
