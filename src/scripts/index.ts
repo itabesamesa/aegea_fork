@@ -1,4 +1,4 @@
-import { CacheType, ChatInputCommandInteraction, Client, Collection, Events, GatewayIntentBits } from 'discord.js';
+import { CacheType, ChatInputCommandInteraction, Client, Collection, Events, GatewayIntentBits, MessageFlagsBitField } from 'discord.js';
 import { discordToken } from '../lib/env';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -44,7 +44,10 @@ client.on(Events.InteractionCreate, interaction => {
 
     command.execute(interaction).catch(error => {
         console.error(error);
-        interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true}).catch(error2 => {
+        interaction.reply({
+            content: 'There was an error while executing this command!',
+            flags: MessageFlagsBitField.Flags.Ephemeral
+        }).catch(error2 => {
             console.error(error2);
         });
     });

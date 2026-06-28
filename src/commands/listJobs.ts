@@ -27,7 +27,7 @@ export default {
             jobs = await findJobsByChannel(interaction.channelId);
         }
 
-        const jobsString = jobs?.map(job => jobToString(job, global)).reduce((a, b) => a + b + "\n", "");
+        const jobsString = jobs.length > 0 ? jobs?.map(job => jobToString(job, global)).reduce((a, b) => a + b + "\n", "") : "No jobs found.";
 
         return interaction.reply({
             content: jobsString,
