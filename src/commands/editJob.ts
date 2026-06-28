@@ -105,10 +105,8 @@ export default {
 
         try {
             const updatedJob = (await db.update(jobTable).set(updateObject).where(eq(jobTable.id, id)).returning()).at(0)!;
-            if (channel) {
-                clearJobTask(id);
-                createJobTask(interaction.client, updatedJob);
-            }
+            clearJobTask(id);
+            createJobTask(interaction.client, updatedJob);
             await interaction.reply({
                 content: `Job edited successfully! New values: ${jobToString(updatedJob, true)}${notes}`,
                 flags: MessageFlagsBitField.Flags.Ephemeral
