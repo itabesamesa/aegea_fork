@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, MessageFlagsBitField, SlashCommandBuilder 
 import { ADMIN_PERMISSION_BIT } from "../lib/consts";
 import { findJobById } from "../lib/dbScripts";
 import { sendPost } from "../lib/post";
+import { logger } from "../lib/logger";
 
 const data = new SlashCommandBuilder()
     .setName('sendonepost')
@@ -41,7 +42,7 @@ export default {
                 });
             }
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     }
 };

@@ -19,6 +19,7 @@ export default defineConfig({
   rules: {
     "@typescript-eslint/no-unsafe-type-assertion": "error",
     "no-magic-numbers": ["error", { ignore: [0, 1] }],
-    "semi": "error"
+    "semi": "error",
+    "no-console": "error"
   },
 });

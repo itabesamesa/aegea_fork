@@ -5,6 +5,7 @@ import { db } from "../lib/env";
 import { jobTable } from "../lib/schema";
 import { eq } from "drizzle-orm";
 import { clearJobTask, createJobTaskIfNotPaused, jobToString } from "../lib/jobStore";
+import { logger } from "../lib/logger";
 
 const data = new SlashCommandBuilder()
     .setName('editjob')
@@ -112,7 +113,7 @@ export default {
                 flags: MessageFlagsBitField.Flags.Ephemeral
             });
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             if (error instanceof Error) {
                 await interaction.reply({
                     content: `Error: ${error.message}`,

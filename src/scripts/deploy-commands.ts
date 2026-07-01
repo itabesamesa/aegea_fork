@@ -1,6 +1,7 @@
 import { REST, RESTPostAPIChatInputApplicationCommandsJSONBody, Routes } from "discord.js";
 import { clientId, discordToken } from "../lib/env";
 import { readdirSync } from "node:fs";
+import { logger } from "../lib/logger";
 
 const COMMAND_DIR_PATH = './src/commands';
 
@@ -23,7 +24,7 @@ const rest = new REST({version:'10'}).setToken(discordToken);
 
 await (async () => {
     try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+		logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 		const data = await rest.put(
@@ -31,8 +32,8 @@ await (async () => {
 			{ body: commands },
 		) as unknown[];
 
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
-		console.error(error);
+		logger.error(error);
 	}
 })();

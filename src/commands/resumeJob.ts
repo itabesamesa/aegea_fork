@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { ADMIN_PERMISSION_BIT } from "../lib/consts";
 import { setJobPaused } from "../lib/jobStore";
+import { logger } from "../lib/logger";
 
 const data = new SlashCommandBuilder()
     .setName('resumejob')
@@ -16,7 +17,7 @@ export default {
     data,
     async execute(interaction: ChatInputCommandInteraction) {
         return setJobPaused(interaction, false).catch(error => {
-            console.error(error);
+            logger.error(error);
         });
     }
 };

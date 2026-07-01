@@ -6,6 +6,7 @@ import { db } from "./env";
 import { countSentPostsBetweenTimes, findPostBySitePostId, findSentPostsByJob } from "./dbScripts";
 import { IntervalTypes } from "./intervals";
 import { MILISECONDS_PER_SECOND } from "./consts";
+import { logger } from "./logger";
 
 export async function sendPost(client: Client<true>, job: Job) {
     const channel = await client.channels.fetch(job.channelId);
@@ -51,14 +52,14 @@ export async function catchUpOnPosts(client: Client<true>, job: Job) {
             const count = await countSentPostsBetweenTimes(job.id, expectedPreviousPostTimeStamp, nextPostTimestamp);
             if (count === 0) {
                 sendPost(client, job).catch(error => {
-                    console.error(error);
+                    logger.error(error);
                 });
             } else if (count) {
                 limit -= count - 1;
             }
         }
         catch (error) {
-            console.error(error);
+            logger.error(error);
         };
     }
 }

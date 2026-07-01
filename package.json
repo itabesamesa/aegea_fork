@@ -20,7 +20,9 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "1.0.0-beta.22",
     "drizzle-orm": "1.0.0-beta.22",
-    "node-html-parser": "^8.0.2"
+    "node-html-parser": "^8.0.2",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -3,12 +3,13 @@ import { db } from "./env";
 import { createIntervalTypes } from "./intervals";
 import { jobTable, postTable, sentTable } from "./schema";
 import { clearJobTask } from "./jobStore";
+import { logger } from "./logger";
 
 export async function setupDb() {
     try {
         await createIntervalTypes();
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 }
 
@@ -26,7 +27,7 @@ export async function deleteJob(id: number) {
         await db.delete(jobTable).where(eq(jobTable.id, id));
         clearJobTask(id);
     } catch (e: unknown) {
-        console.log(e);
+        logger.error(e);
         if (e instanceof Error) {
             return e;
         }

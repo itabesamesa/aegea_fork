@@ -4,6 +4,7 @@ import { db } from "../lib/env";
 import { IntervalTypes } from "../lib/intervals";
 import { createJobTaskIfNotPaused } from "../lib/jobStore";
 import { ADMIN_PERMISSION_BIT, MILISECONDS_PER_SECOND, SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from "../lib/consts";
+import { logger } from "../lib/logger";
 
 
 
@@ -106,12 +107,12 @@ export default {
             });
         } catch(e: unknown) {
             if (e instanceof Error) {
-                console.error(e);
+                logger.error(e);
                 interaction.reply({
                     content: `Error: ${e.message}`,
                     flags: MessageFlagsBitField.Flags.Ephemeral
                 }).catch(e => {
-                    console.error(e);
+                    logger.error(e);
                 });
             }
         }

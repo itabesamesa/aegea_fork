@@ -6,6 +6,7 @@ import { MILISECONDS_PER_SECOND } from "./consts";
 import { eq } from "drizzle-orm";
 import { findJobById } from "./dbScripts";
 import { db } from "./env";
+import { logger } from "./logger";
 
 export type Job = Omit<typeof jobTable.$inferSelect, 'intervalType'> & { intervalType: IntervalTypes };
 export type JobTask = {
@@ -41,19 +42,19 @@ export function createJobTaskIfNotPaused(client: Client<true>, job: Job,
         }
     ) {
     if (job.paused) {
-        console.log("Job is paused, not creating task.");
+        logger.info(`Job ${job.id} is paused, not creating task.`);
         return;
     }
     
     if (options.checkCatchUp) {
         catchUpOnPosts(client, job).catch(error => {
-            console.error(error);
+            logger.error(error);
         });
     }
 
     const callback = () => {
         sendPost(client, job).catch(e => {
-            console.error(e);
+            logger.error(e);
         });
     };
     
