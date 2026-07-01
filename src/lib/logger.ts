@@ -1,8 +1,9 @@
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
-import { logDir } from "./env";
+import { logDir, logLevel } from "./env";
 
 export const logger = createLogger({
+    level: logLevel,
     format: format.combine( format.timestamp({ format: "HH:mm:ss" }), format.colorize(), format.simple(),
         format.printf(info => `${String(info.timestamp)} ${info.level}: ${String(info.message)} `)
     ),

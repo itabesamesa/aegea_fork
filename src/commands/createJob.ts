@@ -5,6 +5,7 @@ import { IntervalTypes } from "../lib/intervals";
 import { createJobTaskIfNotPaused } from "../lib/jobStore";
 import { ADMIN_PERMISSION_BIT, MILISECONDS_PER_SECOND, SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from "../lib/consts";
 import { logger } from "../lib/logger";
+import { CronValidationResult, validateCron } from "../lib/cron";
 
 
 
@@ -48,6 +49,10 @@ const data = new SlashCommandBuilder()
     .addIntegerOption(option => 
         option.setName('catchup')
             .setDescription('How many missed posts to catch up on, should the bot miss any. Does not work for cron. Default: 1')
+    )
+    .addStringOption(option => 
+        option.setName('timezone')
+            .setDescription("Timezone to use for cron jobs. Defaults to the server's timezone.")
     );
 
 export default {
@@ -81,10 +86,26 @@ export default {
         const message = interaction.options.getString('message') ?? "";
         const initialDelay = interaction.options.getInteger('initialdelay') ?? 0;
         const catchupLimit = interaction.options.getInteger('catchup') ?? 1;
+        const timezone = interaction.options.getString('timezone');
 
         try {
             const intervalType = secondsDelay ? IntervalTypes.seconds : IntervalTypes.cron;
-            
+
+            if (intervalType === IntervalTypes.cron) {
+                const result = validateCron(cron!, timezone);
+                if (result === CronValidationResult.invalidCron) {
+                    return interaction.reply({
+                        content: "Error: The provided cron can't be parsed.",
+                        flags: MessageFlagsBitField.Flags.Ephemeral
+                    });
+                } else if (result === CronValidationResult.invalidTimezone) {
+                    return interaction.reply({
+                        content: "Error: The provided time zone can't be parsed.",
+                        flags: MessageFlagsBitField.Flags.Ephemeral
+                    });
+                }
+            }
+
             const dbEntry: typeof jobTable.$inferInsert = {
                 guildId: interaction.guildId!,
                 channelId: interaction.channelId,
@@ -95,7 +116,8 @@ export default {
                 message,
                 intervalSeconds: secondsDelay,
                 intervalCron: cron,
-                catchupLimit
+                catchupLimit,
+                cronTimeZone: timezone
             };
 
             const job = await db.insert(jobTable).values(dbEntry).returning();

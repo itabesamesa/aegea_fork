@@ -1,5 +1,4 @@
-import { sql } from "drizzle-orm";
-import { sqliteTable, text, int, check, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, int, primaryKey } from "drizzle-orm/sqlite-core";
 
 export const intervalTypeTable = sqliteTable("interval_type", {
     id: int("id").primaryKey({autoIncrement: true}),
@@ -16,12 +15,11 @@ export const jobTable = sqliteTable("job", {
     intervalType: int("interval_type_id").notNull().references(() => intervalTypeTable.id),
     intervalSeconds: int("interval_seconds"),
     intervalCron: text("interval_cron"),
+    cronTimeZone: text("cron_time_zone"),
     message: text("message").default("").notNull(),
     catchupLimit: int("catchup_limit").default(1).notNull(),
     paused: int({ mode: "boolean" }).default(false).notNull()
-}, (table) => [
-    check("one_interval_given_check", sql`(${table.intervalSeconds} IS NOT NULL AND ${table.intervalCron} IS NULL) OR (${table.intervalSeconds} IS NULL AND ${table.intervalCron} IS NOT NULL)`)
-]);
+});
 
 export const postTable = sqliteTable("post", {
     id: int("id").primaryKey({autoIncrement: true}),

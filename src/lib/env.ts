@@ -17,3 +17,5 @@ export const clientId = clientIdUnsure;
 export const db = drizzle(process.env.DB_FILE_NAME!);
 
 export const logDir = process.env.LOG_DIR || "logs";
+
+export const logLevel = process.env.LOG_LEVEL || "info";

@@ -7,23 +7,33 @@ import { eq } from "drizzle-orm";
 import { findJobById } from "./dbScripts";
 import { db } from "./env";
 import { logger } from "./logger";
+import { CronJob } from "cron";
 
 export type Job = Omit<typeof jobTable.$inferSelect, 'intervalType'> & { intervalType: IntervalTypes };
 export type JobTask = {
     jobId: number,
-    timeout: NodeJS.Timeout,
-    interval: NodeJS.Timeout | null
+    timeout: NodeJS.Timeout | null,
+    interval: NodeJS.Timeout | null,
+    cronJob: CronJob | null
 }
 
-export const jobTasks: JobTask[] = [];
+export const jobTasks: {
+   [x: number]: JobTask
+} = {};
 
 export function jobToString(job: Job, showChannel: boolean) {
     let string = "";
     string += `ID: ${job.id}; `;
     string += `Tags: \`${job.tagList}\`; `;
-    string += `Message: ${job.message}; `;
+    if (job.message.length > 0) string += `Message: \`${job.message}\`; `;
     string += `Start time: <t:${Math.round(job.timestamp / MILISECONDS_PER_SECOND)}>; `;
-    string += `Interval: ${job.intervalSeconds || job.intervalCron}${job.intervalType === IntervalTypes.seconds ? 's' : ''}; `;
+
+    string += `Interval: \``;
+    if (job.intervalType === IntervalTypes.cron) string += job.intervalCron;
+    else if (job.intervalType === IntervalTypes.seconds) string += `${job.intervalSeconds}s`;
+    string += `\`; `;
+
+    if (job.cronTimeZone) string += `Timezone: ${job.cronTimeZone}; `;
     string += `Catchup Limit: ${job.catchupLimit}; `;
     string += `Paused: ${job.paused}; `;
     string += `Created by: <@${job.userId}>; `;
@@ -57,7 +67,8 @@ export function createJobTaskIfNotPaused(client: Client<true>, job: Job,
             logger.error(e);
         });
     };
-    
+
+    logger.info(`Creating task for job: ${JSON.stringify(job)}`);
     if (job.intervalType === IntervalTypes.seconds) {
         const currentTime = Date.now();
         const msInterval = job.intervalSeconds! * MILISECONDS_PER_SECOND;
@@ -71,21 +82,37 @@ export function createJobTaskIfNotPaused(client: Client<true>, job: Job,
                 task.interval = setInterval(callback, msInterval);
             }, options.initialDelay !== undefined ? 0 : msToNextPost),
             interval: null,
+            cronJob: null
         };
-        jobTasks.push(task);
+        jobTasks[job.id] = task;
     } else if (job.intervalType === IntervalTypes.cron) {
-        throw Error("Not yet implemented.");
+        const task: JobTask = {
+            jobId: job.id,
+            cronJob: new CronJob(job.intervalCron!, callback, null, true),
+            interval: null,
+            timeout: null
+        };
+        jobTasks[job.id] = task;
     }
 }
 
 export function clearJobTask(jobId: number) {
-    const jobTask = jobTasks.find(j => j.jobId === jobId);
+    const jobTask = jobTasks[jobId];
     if (jobTask) {
-        clearTimeout(jobTask.timeout);
-        if (jobTask.interval) {
-            clearInterval(jobTask.interval);
+        if (jobTask.timeout) {
+            clearTimeout(jobTask.timeout);
+            if (jobTask.interval) {
+                clearInterval(jobTask.interval);
+            }
+        }
+
+        if (jobTask.cronJob) {
+            jobTask.cronJob.stop()?.catch(error => {
+                logger.error(error);
+            });
         }
     }
+    delete jobTasks[jobId];
 }
 
 export async function setJobPaused(interaction: ChatInputCommandInteraction, paused: boolean) {
